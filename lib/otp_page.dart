@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:sms_autofill/sms_autofill.dart';
 
 class OTPPage extends StatefulWidget {
-  final String otpNumber;
-  OTPPage({this.otpNumber});
+  final String phoneNumber;
+  OTPPage({this.phoneNumber});
   @override
   _OTPPageState createState() => _OTPPageState();
 }
@@ -32,13 +32,14 @@ class _OTPPageState extends State<OTPPage> with CodeAutoFill {
   String appSignature;
   String otpCode;
 
-  TextEditingController resendOtpController = TextEditingController();
+  static const TextStyle textStyle = TextStyle(fontWeight: FontWeight.bold);
 
   @override
   void codeUpdated() {
     setState(() {
       otpCode = code;
     });
+    if (otpCode != null) setControllerText();
   }
 
   void otpListener() {
@@ -112,40 +113,21 @@ class _OTPPageState extends State<OTPPage> with CodeAutoFill {
     mControllerOtp2.dispose();
     mControllerOtp3.dispose();
     mControllerOtp4.dispose();
-    resendOtpController.dispose();
   }
 
   setControllerText() {
-    mControllerOtp1.text = widget.otpNumber.substring(0, 1);
-    mControllerOtp2.text = widget.otpNumber.substring(1, 2);
-    mControllerOtp3.text = widget.otpNumber.substring(2, 3);
-    mControllerOtp4.text = widget.otpNumber.substring(3);
-  }
-
-  resendOTP() {
-    if (resendOtpController.text.length == 4) {
-      mControllerOtp1.text = resendOtpController.text.substring(0, 1);
-      mControllerOtp2.text = resendOtpController.text.substring(1, 2);
-      mControllerOtp3.text = resendOtpController.text.substring(2, 3);
-      mControllerOtp4.text = resendOtpController.text.substring(3);
-    }
+    mControllerOtp1.text = otpCode.substring(0, 1);
+    mControllerOtp2.text = otpCode.substring(1, 2);
+    mControllerOtp3.text = otpCode.substring(2, 3);
+    mControllerOtp4.text = otpCode.substring(3);
   }
 
   @override
   void initState() {
     super.initState();
     otpListener();
-    listenForSms();
-    setControllerText();
-  }
-
-  Future<void> listenForSms() async {
     listenForCode();
-    await getAppSign();
-  }
-
-  Future<void> getAppSign() async {
-    await SmsAutoFill().getAppSignature.then((signature) {
+    SmsAutoFill().getAppSignature.then((signature) {
       setState(() {
         appSignature = signature;
         print(appSignature);
@@ -351,42 +333,32 @@ class _OTPPageState extends State<OTPPage> with CodeAutoFill {
           children: [
             Align(
                 alignment: Alignment.topRight,
-                child: Text(otpCode ?? "OTP Code")),
+                child: Text(
+                  otpCode ?? "OTP Code",
+                  style: textStyle,
+                )),
             Align(
                 alignment: Alignment.topLeft,
-                child: Text(appSignature ?? "No App Signature")),
+                child: Text(
+                  appSignature ?? "No App Signature",
+                  style: textStyle,
+                )),
             Align(
                 alignment: Alignment.topCenter,
-                child: Text(widget.otpNumber ?? "No Phone Number")),
+                child: Text(
+                  widget.phoneNumber ?? "No Phone Number",
+                  style: textStyle,
+                )),
             Align(alignment: Alignment.center, child: otpFields),
-            Align(
-              alignment: Alignment.bottomCenter,
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Container(
-                      margin: const EdgeInsets.symmetric(
-                          horizontal: 25, vertical: 50),
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      color: Colors.grey[350],
-                      child: TextField(
-                        controller: resendOtpController,
-                        decoration: InputDecoration(
-                            errorBorder: InputBorder.none,
-                            enabledBorder: InputBorder.none,
-                            focusedBorder: InputBorder.none,
-                            disabledBorder: InputBorder.none,
-                            border: InputBorder.none),
-                      ),
-                    ),
-                  ),
-                  Container(
-                      margin: const EdgeInsets.only(right: 25),
-                      child: ElevatedButton(
-                          onPressed: resendOTP, child: Text("Resend OTP")))
-                ],
-              ),
-            )
+            Positioned(
+                bottom: 100,
+                left: 25,
+                right: 25,
+                child: ElevatedButton(
+                    onPressed: () {
+                      listenForCode();
+                    },
+                    child: Text("Resend OTP")))
           ],
         ),
       ),

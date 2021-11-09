@@ -31,6 +31,7 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   final textController = TextEditingController();
+  final snackBar = SnackBar(content: Text("Enter 10 digit phone Number"));
 
   @override
   void dispose() {
@@ -39,12 +40,14 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   nextScreen(BuildContext context) {
-    if (textController.text.length == 4) {
+    if (textController.text.length == 10) {
       Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => OTPPage(otpNumber: textController.text),
+            builder: (context) => OTPPage(phoneNumber: textController.text),
           ));
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(snackBar);
     }
   }
 
@@ -66,6 +69,7 @@ class _MyHomePageState extends State<MyHomePage> {
               child: TextField(
                 controller: textController,
                 decoration: InputDecoration(
+                    hintText: "Enter 10 digit Phone Number",
                     errorBorder: InputBorder.none,
                     enabledBorder: InputBorder.none,
                     focusedBorder: InputBorder.none,
