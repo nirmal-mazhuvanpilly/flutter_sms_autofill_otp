@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:sms_autofill/sms_autofill.dart';
+import 'package:sms_auto_fill/otp_page.dart';
 
 void main() {
   runApp(MyApp());
@@ -29,44 +29,24 @@ class MyHomePage extends StatefulWidget {
   _MyHomePageState createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> with CodeAutoFill {
-  String appSignature;
-  String otpCode;
-
-  @override
-  void codeUpdated() {
-    setState(() {
-      otpCode = code;
-    });
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    listenForCode();
-
-    SmsAutoFill().getAppSignature.then((signature) {
-      setState(() {
-        appSignature = signature;
-      });
-    });
-
-    retrieveSMS();
-  }
+class _MyHomePageState extends State<MyHomePage> {
+  final textController = TextEditingController();
 
   @override
   void dispose() {
+    textController.dispose();
     super.dispose();
-    cancel();
-    SmsAutoFill().unregisterListener();
   }
 
-  retrieveSMS() async {
-    final signCode = await SmsAutoFill().getAppSignature;
-    print(signCode);
+  nextScreen(BuildContext context) {
+    if (textController.text.length == 4) {
+      Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => OTPPage(otpNumber: textController.text),
+          ));
+    }
   }
-
-  // 3eo/N4c/C40
 
   @override
   Widget build(BuildContext context) {
@@ -79,9 +59,25 @@ class _MyHomePageState extends State<MyHomePage> with CodeAutoFill {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: <Widget>[
-            Text(appSignature ?? "No App Signature"),
-            Text(otpCode ?? "No OTP"),
-            ElevatedButton(onPressed: retrieveSMS, child: Text("Send OTP"))
+            Container(
+              margin: const EdgeInsets.all(20),
+              padding: const EdgeInsets.symmetric(horizontal: 10),
+              color: Colors.grey[350],
+              child: TextField(
+                controller: textController,
+                decoration: InputDecoration(
+                    errorBorder: InputBorder.none,
+                    enabledBorder: InputBorder.none,
+                    focusedBorder: InputBorder.none,
+                    disabledBorder: InputBorder.none,
+                    border: InputBorder.none),
+              ),
+            ),
+            ElevatedButton(
+                onPressed: () {
+                  nextScreen(context);
+                },
+                child: Text("Send OTP"))
           ],
         ),
       ),

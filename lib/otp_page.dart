@@ -1,0 +1,395 @@
+import 'dart:async';
+import 'package:flutter/material.dart';
+import 'package:sms_autofill/sms_autofill.dart';
+
+class OTPPage extends StatefulWidget {
+  final String otpNumber;
+  OTPPage({this.otpNumber});
+  @override
+  _OTPPageState createState() => _OTPPageState();
+}
+
+class _OTPPageState extends State<OTPPage> with CodeAutoFill {
+  TextEditingController mControllerOtp1 = TextEditingController();
+  TextEditingController mControllerOtp2 = TextEditingController();
+  TextEditingController mControllerOtp3 = TextEditingController();
+  TextEditingController mControllerOtp4 = TextEditingController();
+  FocusNode mFocusOtp1 = FocusNode();
+  FocusNode mFocusOtp2 = FocusNode();
+  FocusNode mFocusOtp3 = FocusNode();
+  FocusNode mFocusOtp4 = FocusNode();
+
+  bool otpFocus1;
+  bool otpFocus2;
+  bool otpFocus3;
+  bool otpFocus4;
+
+  StreamController<bool> otpFocusStream1 = new StreamController();
+  StreamController<bool> otpFocusStream2 = new StreamController();
+  StreamController<bool> otpFocusStream3 = new StreamController();
+  StreamController<bool> otpFocusStream4 = new StreamController();
+
+  String appSignature;
+  String otpCode;
+
+  TextEditingController resendOtpController = TextEditingController();
+
+  @override
+  void codeUpdated() {
+    setState(() {
+      otpCode = code;
+    });
+  }
+
+  void otpListener() {
+    otpFocusStream1.sink.add(false);
+    otpFocusStream2.sink.add(false);
+    otpFocusStream3.sink.add(false);
+    otpFocusStream4.sink.add(false);
+
+    mFocusOtp1.addListener(() {
+      if (mFocusOtp1.hasFocus) {
+        otpFocus1 = true;
+        otpFocusStream1.sink.add(otpFocus1);
+        // print(otpFocus1);
+      } else {
+        otpFocus1 = false;
+        otpFocusStream1.sink.add(otpFocus1);
+        // print(otpFocus1);
+      }
+    });
+
+    mFocusOtp2.addListener(() {
+      if (mFocusOtp2.hasFocus) {
+        otpFocus2 = true;
+        otpFocusStream2.sink.add(otpFocus2);
+        // print(otpFocus2);
+      } else {
+        otpFocus2 = false;
+        otpFocusStream2.sink.add(otpFocus2);
+        // print(otpFocus2);
+      }
+    });
+
+    mFocusOtp3.addListener(() {
+      if (mFocusOtp3.hasFocus) {
+        otpFocus3 = true;
+        otpFocusStream3.sink.add(otpFocus3);
+        // print(otpFocus3);
+      } else {
+        otpFocus3 = false;
+        otpFocusStream3.sink.add(otpFocus3);
+        // print(otpFocus3);
+      }
+    });
+
+    mFocusOtp4.addListener(() {
+      if (mFocusOtp4.hasFocus) {
+        otpFocus4 = true;
+        otpFocusStream4.sink.add(otpFocus4);
+        // print(otpFocus4);
+      } else {
+        otpFocus4 = false;
+        otpFocusStream4.sink.add(otpFocus4);
+        // print(otpFocus4);
+      }
+    });
+  }
+
+  void otpDispose() {
+    mFocusOtp1.dispose();
+    mFocusOtp2.dispose();
+    mFocusOtp3.dispose();
+    mFocusOtp4.dispose();
+    otpFocusStream1.close();
+    otpFocusStream2.close();
+    otpFocusStream3.close();
+    otpFocusStream4.close();
+  }
+
+  void controllerDispose() {
+    mControllerOtp1.dispose();
+    mControllerOtp2.dispose();
+    mControllerOtp3.dispose();
+    mControllerOtp4.dispose();
+    resendOtpController.dispose();
+  }
+
+  setControllerText() {
+    mControllerOtp1.text = widget.otpNumber.substring(0, 1);
+    mControllerOtp2.text = widget.otpNumber.substring(1, 2);
+    mControllerOtp3.text = widget.otpNumber.substring(2, 3);
+    mControllerOtp4.text = widget.otpNumber.substring(3);
+  }
+
+  resendOTP() {
+    if (resendOtpController.text.length == 4) {
+      mControllerOtp1.text = resendOtpController.text.substring(0, 1);
+      mControllerOtp2.text = resendOtpController.text.substring(1, 2);
+      mControllerOtp3.text = resendOtpController.text.substring(2, 3);
+      mControllerOtp4.text = resendOtpController.text.substring(3);
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    otpListener();
+    listenForSms();
+    setControllerText();
+  }
+
+  Future<void> listenForSms() async {
+    listenForCode();
+    await getAppSign();
+  }
+
+  Future<void> getAppSign() async {
+    await SmsAutoFill().getAppSignature.then((signature) {
+      setState(() {
+        appSignature = signature;
+        print(appSignature);
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    otpDispose();
+    cancel();
+    SmsAutoFill().unregisterListener();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final otp1 = StreamBuilder(
+      stream: otpFocusStream1.stream,
+      builder: (context, snapshot) {
+        if (snapshot.hasData) {
+          return Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(5),
+              border: snapshot.data
+                  ? Border.all(color: Colors.black, width: 1.5)
+                  : Border.all(color: Colors.grey),
+            ),
+            child: TextField(
+              cursorColor: Colors.black,
+              keyboardAppearance: Brightness.light,
+              keyboardType: TextInputType.number,
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.black, fontSize: 20.0),
+              controller: mControllerOtp1,
+              focusNode: mFocusOtp1,
+              maxLength: 1,
+              maxLines: 1,
+              textInputAction: TextInputAction.done,
+              decoration: InputDecoration(
+                border: InputBorder.none,
+                focusedBorder: InputBorder.none,
+                disabledBorder: InputBorder.none,
+                counterText: "",
+              ),
+              onChanged: (value) {
+                if (value.length > 0) {
+                  mFocusOtp2.requestFocus();
+                }
+              },
+            ),
+          );
+        } else {
+          return Container();
+        }
+      },
+    );
+
+    final otp2 = StreamBuilder(
+      stream: otpFocusStream2.stream,
+      builder: (context, snapshot) {
+        if (snapshot.hasData) {
+          return Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(5),
+              border: snapshot.data
+                  ? Border.all(color: Colors.black, width: 1.5)
+                  : Border.all(color: Colors.grey),
+            ),
+            child: TextField(
+                cursorColor: Colors.black,
+                keyboardAppearance: Brightness.light,
+                keyboardType: TextInputType.number,
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.black, fontSize: 20.0),
+                controller: mControllerOtp2,
+                focusNode: mFocusOtp2,
+                maxLength: 1,
+                textInputAction: TextInputAction.done,
+                decoration: InputDecoration(
+                  border: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                  disabledBorder: InputBorder.none,
+                  counterText: "",
+                ),
+                onChanged: (value) {
+                  if (value.length > 0) {
+                    mFocusOtp3.requestFocus();
+                  } else {
+                    mFocusOtp1.requestFocus();
+                  }
+                }),
+          );
+        } else {
+          return Container();
+        }
+      },
+    );
+
+    final otp3 = StreamBuilder(
+      stream: otpFocusStream3.stream,
+      builder: (context, snapshot) {
+        if (snapshot.hasData) {
+          return Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(5),
+              border: snapshot.data
+                  ? Border.all(color: Colors.black, width: 1.5)
+                  : Border.all(color: Colors.grey),
+            ),
+            child: TextField(
+                cursorColor: Colors.black,
+                keyboardAppearance: Brightness.light,
+                keyboardType: TextInputType.number,
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.black, fontSize: 20.0),
+                controller: mControllerOtp3,
+                focusNode: mFocusOtp3,
+                maxLength: 1,
+                textInputAction: TextInputAction.done,
+                decoration: InputDecoration(
+                  border: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                  disabledBorder: InputBorder.none,
+                  counterText: "",
+                ),
+                onChanged: (value) {
+                  if (value.length > 0) {
+                    mFocusOtp4.requestFocus();
+                  } else {
+                    mFocusOtp2.requestFocus();
+                  }
+                }),
+          );
+        } else {
+          return Container();
+        }
+      },
+    );
+
+    final otp4 = StreamBuilder(
+      stream: otpFocusStream4.stream,
+      builder: (context, snapshot) {
+        if (snapshot.hasData) {
+          return Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(5),
+                border: snapshot.data
+                    ? Border.all(color: Colors.black, width: 1.5)
+                    : Border.all(color: Colors.grey),
+              ),
+              child: TextField(
+                  cursorColor: Colors.black,
+                  keyboardAppearance: Brightness.light,
+                  keyboardType: TextInputType.number,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.black, fontSize: 20.0),
+                  controller: mControllerOtp4,
+                  focusNode: mFocusOtp4,
+                  maxLength: 1,
+                  textInputAction: TextInputAction.done,
+                  decoration: InputDecoration(
+                    border: InputBorder.none,
+                    focusedBorder: InputBorder.none,
+                    disabledBorder: InputBorder.none,
+                    counterText: "",
+                  ),
+                  onChanged: (value) {
+                    if (value.length > 0) {
+                    } else {
+                      mFocusOtp3.requestFocus();
+                    }
+                  }));
+        } else {
+          return Container();
+        }
+      },
+    );
+
+    final otpBoxSpace = (MediaQuery.of(context).size.width - 122) / 4;
+
+    final otpFields = Container(
+      margin: EdgeInsets.only(left: 66.0, right: 66.0, top: 50),
+      child: Row(
+        children: <Widget>[
+          Expanded(child: otp1),
+          SizedBox(width: otpBoxSpace * 0.20),
+          Expanded(child: otp2),
+          SizedBox(width: otpBoxSpace * 0.20),
+          Expanded(child: otp3),
+          SizedBox(width: otpBoxSpace * 0.20),
+          Expanded(child: otp4),
+        ],
+      ),
+    );
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("Enter OTP"),
+      ),
+      body: Center(
+        child: Stack(
+          children: [
+            Align(
+                alignment: Alignment.topRight,
+                child: Text(otpCode ?? "OTP Code")),
+            Align(
+                alignment: Alignment.topLeft,
+                child: Text(appSignature ?? "No App Signature")),
+            Align(
+                alignment: Alignment.topCenter,
+                child: Text(widget.otpNumber ?? "No Phone Number")),
+            Align(alignment: Alignment.center, child: otpFields),
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(
+                          horizontal: 25, vertical: 50),
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      color: Colors.grey[350],
+                      child: TextField(
+                        controller: resendOtpController,
+                        decoration: InputDecoration(
+                            errorBorder: InputBorder.none,
+                            enabledBorder: InputBorder.none,
+                            focusedBorder: InputBorder.none,
+                            disabledBorder: InputBorder.none,
+                            border: InputBorder.none),
+                      ),
+                    ),
+                  ),
+                  Container(
+                      margin: const EdgeInsets.only(right: 25),
+                      child: ElevatedButton(
+                          onPressed: resendOTP, child: Text("Resend OTP")))
+                ],
+              ),
+            )
+          ],
+        ),
+      ),
+    );
+  }
+}
